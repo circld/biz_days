@@ -1,7 +1,7 @@
 import biz_days
 from biz_days import business_days_from_now, business_days_interval,  \
     holiday_count, main, str_to_date, weekdays
-from datetime import date
+from datetime import date, timedelta
 from docopt import docopt, DocoptExit
 import hypothesis as h
 import hypothesis.strategies as st
@@ -26,7 +26,7 @@ def days_from_cli_args(draw):
 
 
 @st.composite
-def in_between_cli_args(draw):
+def in_interval_cli_args(draw):
     return [
         'in_interval',
         '-s', draw(st.dates()).strftime('%Y-%m-%d'),
@@ -157,8 +157,8 @@ def test_cli_implementation_biz_days_from_now():
         args = docopt(doc, ['in_interval', '-s', '2017-10-01', '-n', '20'])
 
 
-@h.given(arguments=in_between_cli_args())
-def test_cli_in_between_general_cases(arguments):
+@h.given(arguments=in_interval_cli_args())
+def test_cli_in_interval_general_cases(arguments):
     doc = biz_days.__doc__
     args = arguments[0] + arguments[1]
     parsed = docopt(doc, args)
@@ -177,3 +177,47 @@ def test_cli_days_from_general_cases(arguments):
     assert parsed['--start']
     assert parsed['days_from']
     assert len(main(parsed)) == 10
+
+
+@h.given(start=st.dates(), days=st.integers(min_value=5, max_value=500))
+def test_cli_agreement_interval_interval_and_days_from(start, days):
+    doc = biz_days.__doc__
+    start_date = start.strftime('%Y-%m-%d')
+    skip_dates = list(map(
+        lambda d: d.strftime('%Y-%m-%d'),
+        (start + timedelta(days=1), start + timedelta(days=3))
+    ))
+    f_args = ['days_from', '-s', start_date, '-n', days] + skip_dates
+    end_date = main(docopt(doc, f_args))
+
+    b_args = ['in_interval', '-s', start_date, '-e', end_date] + skip_dates
+    interval_days = main(docopt(doc, b_args))
+
+    expected_days = days
+    if start.weekday() < 5:
+        expected_days += 1
+
+    assert interval_days == expected_days
+
+
+@h.given(days=st.integers(min_value=5, max_value=500))
+def test_cli_automatically_assigns_start_if_not_defined(days):
+    doc = biz_days.__doc__
+    start = date.today()
+    skip_dates = list(map(
+        lambda d: d.strftime('%Y-%m-%d'),
+        (start + timedelta(days=1), start + timedelta(days=3))
+    ))
+
+    # don't define start; ensure both commands generate start == today
+    f_args = ['days_from', '-n', days] + skip_dates
+    end_date = main(docopt(doc, f_args))
+
+    b_args = ['in_interval', '-e', end_date] + skip_dates
+    interval_days = main(docopt(doc, b_args))
+
+    expected_days = days
+    if start.weekday() < 5:
+        expected_days += 1
+
+    assert interval_days == expected_days

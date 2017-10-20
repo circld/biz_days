@@ -8,6 +8,8 @@ This project was conceived of primarily to familiarize myself with two interesti
 
 This README.md was lovingly crafted with the help of [grip](https://github.com/joeyespo/grip).
 
+Finally, the project attempts to follow [semantic versioning guidelines](http://semver.org/).
+
 ## Usage
 
 Thanks to `docopt`, CLI usage is clearly printed at the top of `biz_days.py`:
@@ -47,4 +49,13 @@ $ python biz_days.py in_interval -s 2017-01-01 -e 2017-12-31
 
 Note that holidays *are not* accounted for by default, but can be specified at the end of any command, e.g., you want to exclude US holidays:
 
-`$ python biz_days.py in_interval -s 2017-01-01 -e 2017-12-31 2017-01-01 2017-01-02 2017-01-16 2017-05-29 2017-07-04 2017-09-04 2017-10-09 2017-11-10 2017-11-23 2017-11-24 2017-12-25`
+```
+$ python biz_days.py in_interval -s 2017-01-01 -e 2017-12-31 2017-01-01 2017-01-02 2017-01-16 2017-05-29 2017-07-04 2017-09-04 2017-10-09 2017-11-10 2017-11-23 2017-11-24 2017-12-25
+250
+```
+
+## Run Tests
+
+To run all tests, run the following command from the project root directory:
+
+`$ python -m pytest test/`

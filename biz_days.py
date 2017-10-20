@@ -1,5 +1,6 @@
-"""Calculate what day is `n` business days from any date, or calculate how many
-business days are between two dates.
+"""Calculate what day is `n` business days from any date (exclusive of start
+date), or calculate how many business days are between two dates (inclusive
+of start and end dates).
 
 Note: all dates should be in YYYY-MM-DD format.
 
@@ -109,7 +110,7 @@ def weekdays(dow1, dow2):
     if dow1 < 0 or dow1 > 6 or dow2 < 0 or dow2 > 6:
         raise ValueError
     if dow1 == dow2:
-        return 0
+        return 1 if dow1 < 5 else 0
     d2 = dow2 if dow2 > dow1 else dow2 + 7
 
     return len(tuple(i for i in range(dow1, d2 + 1) if i not in (5, 6)))
