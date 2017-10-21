@@ -143,5 +143,5 @@ def main(args):
 
 if __name__ == '__main__':
 
-    args = docopt(__doc__, version='0.1.0')
+    args = docopt(__doc__, version='0.2.0')
     sys.exit(print(main(args)))
