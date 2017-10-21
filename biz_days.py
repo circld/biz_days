@@ -45,17 +45,24 @@ def business_days_from_now(days, start=None, skip=None):
         return start
 
     skip = skip if skip else []
-    sign = 1 if days > 0 else -1
+    start = date.today() if start is None else start
+    op = date.__add__ if days >= 0 else date.__sub__  # handle +/- days
 
     def iterate_days(current, remaining):
-        cur = current + timedelta(days=sign*1)
-        if cur.weekday() < 5 and cur not in skip:
-            remaining -= sign*1
         if remaining == 0:
-            return cur
-        return iterate_days(current + timedelta(days=sign*1), remaining)
+            return current
 
-    return iterate_days(start, days)
+        guess = op(current, timedelta(days=remaining))
+
+        # ensure guess is a weekday
+        while guess.weekday() > 4:
+            guess = op(guess, timedelta(days=1))
+        s, e = sorted([current, guess])
+        diff = business_days_interval(s, e, skip) - (1 if current.weekday() < 5 else 0)
+
+        return iterate_days(guess, remaining - diff)
+
+    return iterate_days(start, abs(days))
 
 
 def business_days_interval(start, end, skip=None):
