@@ -8,6 +8,9 @@ import hypothesis.strategies as st
 import pytest as pt
 
 
+INTEGER_BOUND = 10000
+
+
 @st.composite
 def list_of_dates(draw):
     return draw(st.iterables(st.dates(), min_size=1, max_size=100))
@@ -18,7 +21,7 @@ def days_from_cli_args(draw):
     return [
         'days_from',
         '-s', draw(st.dates()).strftime('%Y-%m-%d'),
-        '-n', draw(st.integers(min_value=-500, max_value=500))
+        '-n', draw(st.integers(min_value=-1 * INTEGER_BOUND, max_value=INTEGER_BOUND))
     ], draw(st.builds(
         lambda e: list(map(lambda d: d.strftime('%Y-%m-%d'), e)),
         st.lists(st.dates(), min_size=1, max_size=100))
@@ -37,7 +40,7 @@ def in_interval_cli_args(draw):
     )
 
 
-@h.given(days=st.integers(min_value=-500, max_value=500), start=st.dates(),
+@h.given(days=st.integers(min_value=-1 * INTEGER_BOUND, max_value=INTEGER_BOUND), start=st.dates(),
          skip=list_of_dates())
 def test_business_days_from_now_general(days, start, skip):
     if days >= 0:
@@ -179,7 +182,7 @@ def test_cli_days_from_general_cases(arguments):
     assert len(main(parsed)) == 10
 
 
-@h.given(start=st.dates(), days=st.integers(min_value=5, max_value=500))
+@h.given(start=st.dates(), days=st.integers(min_value=5, max_value=INTEGER_BOUND))
 def test_cli_agreement_interval_interval_and_days_from(start, days):
     doc = biz_days.__doc__
     start_date = start.strftime('%Y-%m-%d')
@@ -200,7 +203,7 @@ def test_cli_agreement_interval_interval_and_days_from(start, days):
     assert interval_days == expected_days
 
 
-@h.given(days=st.integers(min_value=5, max_value=500))
+@h.given(days=st.integers(min_value=5, max_value=INTEGER_BOUND))
 def test_cli_automatically_assigns_start_if_not_defined(days):
     doc = biz_days.__doc__
     start = date.today()
