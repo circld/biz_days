@@ -58,7 +58,8 @@ def business_days_from_now(days, start=None, skip=None):
         while guess.weekday() > 4:
             guess = op(guess, timedelta(days=1))
         s, e = sorted([current, guess])
-        diff = business_days_interval(s, e, skip) - (1 if current.weekday() < 5 else 0)
+        diff = business_days_interval(s, e, skip) - \
+            (1 if current.weekday() < 5 else 0)
 
         return iterate_days(guess, remaining - diff)
 
@@ -89,7 +90,7 @@ def business_days_interval(start, end, skip=None):
 
 
 def holiday_count(start, end, skip):
-    """Count number of skip days are in within range [start, end].
+    """Count number of skip days within range [start, end].
 
     Args:
         start (date): start date
@@ -101,11 +102,13 @@ def holiday_count(start, end, skip):
     """
     skip = skip if skip else []
     non_weekend = (d for d in skip if d.weekday() < 5)
-    return len([e for e in non_weekend if e >= start and e <= end])
+    # Count number of days without creating intermediate list
+    return sum(1 for e in non_weekend if e >= start and e <= end)
 
 
 def weekdays(dow1, dow2):
-    """Week days between day of the week 1 and day of the week 2 (`dow2` > `dow1`)
+    """Week days between day of the week 1 and day of the week 2
+    (`dow2` > `dow1`)
 
     Args:
         dow1 (int): 0-6 for monday-sunday
@@ -117,10 +120,12 @@ def weekdays(dow1, dow2):
     if dow1 < 0 or dow1 > 6 or dow2 < 0 or dow2 > 6:
         raise ValueError
     if dow1 == dow2:
-        return 1 if dow1 < 5 else 0
+        # return 1 if dow1 < 5 else 0
+        # Why the above? There's not 1 weekday BETWEEN Mon & Mon
+        return 0
     d2 = dow2 if dow2 > dow1 else dow2 + 7
-
-    return len(tuple(i for i in range(dow1, d2 + 1) if i not in (5, 6)))
+    # Count the desired number of days without creating intermediate tuples
+    return sum(1 for i in xrange(dow1, d2 + 1) if i not in (5, 6))
 
 
 def str_to_date(text):
@@ -130,9 +135,11 @@ def str_to_date(text):
 def main(args):
 
     days = int(args['-n']) if args['-n'] is not None else args['-n']
-    start = date.today() if args['--start'] == 'today' else str_to_date(args['--start'])
+    start = date.today() if args['--start'] == 'today' \
+        else str_to_date(args['--start'])
     end = str_to_date(args['--end']) if args['--end'] is not None else None
-    skip = tuple(str_to_date(d) for d in args['SKIP']) if args['SKIP'] is not None else args['SKIP']
+    skip = tuple(str_to_date(d) for d in args['SKIP']) \
+        if args['SKIP'] is not None else args['SKIP']
 
     if args['days_from']:
         return business_days_from_now(days, start, skip).strftime('%Y-%m-%d')
